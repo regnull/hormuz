@@ -3,25 +3,26 @@ import { GameState } from '@/types/game';
 
 /**
  * Generate turn narrative dynamically
- * Uses AI for unique content or falls back to templates
+ * ALWAYS uses AI for unique, contextual content
  */
 export async function generateTurnNarrative(
   gameState: GameState,
   storyArc: string
 ): Promise<string> {
-  // Check if AI generation is enabled and API key available
-  const useAI = process.env.ANTHROPIC_API_KEY && process.env.NEXT_PUBLIC_ENABLE_NARRATIVE_AI === 'true';
+  // Always try AI generation first (no longer optional)
+  const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  if (useAI) {
-    try {
-      return await generateAINarrative(gameState, storyArc);
-    } catch (error) {
-      console.error('AI narrative generation failed, falling back to template:', error);
-      return generateTemplateNarrative(gameState, storyArc);
-    }
+  if (!apiKey) {
+    console.warn('No ANTHROPIC_API_KEY found, falling back to templates');
+    return generateTemplateNarrative(gameState, storyArc);
   }
 
-  return generateTemplateNarrative(gameState, storyArc);
+  try {
+    return await generateAINarrative(gameState, storyArc);
+  } catch (error) {
+    console.error('AI narrative generation failed, falling back to template:', error);
+    return generateTemplateNarrative(gameState, storyArc);
+  }
 }
 
 /**

@@ -114,7 +114,11 @@ export default function GamePage() {
   return (
     <div className="min-h-screen bg-slate-950 relative">
       {/* Scene Background */}
-      <SceneImage scene={currentTurn.sceneImage} mood={currentTurn.mood} />
+      <SceneImage
+        scene={currentTurn.sceneImage}
+        mood={currentTurn.mood}
+        generatedImageUrl={(currentTurn as any).generatedImageUrl}
+      />
 
       {/* Header */}
       <div className="border-b border-slate-800 bg-slate-900/50">

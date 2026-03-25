@@ -6,6 +6,7 @@ interface SceneImageProps {
   scene: string;
   mood: Mood;
   className?: string;
+  generatedImageUrl?: string; // AI-generated image URL
 }
 
 const moodFilters = {
@@ -28,14 +29,21 @@ const sceneGradients = {
   'disaster': 'from-red-950 via-red-900/40 to-black',
 };
 
-export function SceneImage({ scene, mood, className = '' }: SceneImageProps) {
+export function SceneImage({ scene, mood, className = '', generatedImageUrl }: SceneImageProps) {
   const gradient = sceneGradients[scene as keyof typeof sceneGradients] || sceneGradients['situation-room'];
   const filter = moodFilters[mood];
 
   return (
     <div className={`absolute inset-0 -z-10 ${className}`}>
-      {/* Gradient background */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
+      {/* AI-generated image or gradient background */}
+      {generatedImageUrl ? (
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${generatedImageUrl})` }}
+        />
+      ) : (
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
+      )}
 
       {/* Pattern overlay */}
       <div

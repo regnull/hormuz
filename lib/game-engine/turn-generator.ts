@@ -3,6 +3,7 @@ import { Turn, Option } from '@/types/turn';
 import { generateTurnNarrative } from './narrative-generator';
 import { generateOptions } from './option-generator';
 import { determineStoryArc } from './story-arc';
+import { generateTurnImage, getCachedTurnImage, cacheTurnImage } from './image-generator';
 
 /**
  * Dynamically generate a turn based on current game state
@@ -11,23 +12,54 @@ import { determineStoryArc } from './story-arc';
 export async function generateTurn(gameState: GameState): Promise<Turn> {
   const turnNumber = gameState.currentTurn;
 
+  console.log(`[Turn Generator] Generating turn ${turnNumber}...`);
+
   // Determine what kind of turn this should be based on game state
   const storyArc = determineStoryArc(gameState);
+  console.log(`[Turn Generator] Story arc: ${storyArc}`);
+
+  // Generate narrative (this calls LLM)
+  console.log(`[Turn Generator] Generating narrative via LLM...`);
   const situation = await generateTurnNarrative(gameState, storyArc);
+  console.log(`[Turn Generator] Narrative generated (${situation.length} chars)`);
+
+  const title = generateTurnTitle(gameState, storyArc);
   const options = generateOptions(gameState, storyArc);
   const intelligence = generateIntelligenceBriefs(gameState);
   const scene = determineScene(gameState);
   const mood = determineMood(gameState);
 
-  return {
+  // Generate or retrieve cached image
+  console.log(`[Turn Generator] Generating turn image...`);
+  let imageUrl = getCachedTurnImage(turnNumber);
+
+  if (!imageUrl) {
+    imageUrl = await generateTurnImage(gameState, title, situation);
+    if (imageUrl) {
+      cacheTurnImage(turnNumber, imageUrl);
+      console.log(`[Turn Generator] Image generated and cached`);
+    }
+  } else {
+    console.log(`[Turn Generator] Using cached image`);
+  }
+
+  const turn: Turn = {
     id: turnNumber,
-    title: generateTurnTitle(gameState, storyArc),
+    title,
     situation,
     intelligence,
     sceneImage: scene,
     mood,
     options,
   };
+
+  // Add generated image URL to turn if available
+  if (imageUrl) {
+    (turn as any).generatedImageUrl = imageUrl;
+  }
+
+  console.log(`[Turn Generator] Turn ${turnNumber} generation complete`);
+  return turn;
 }
 
 /**

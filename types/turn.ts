@@ -18,6 +18,7 @@ export interface Turn {
   // Visuals
   sceneImage: string; // Reference to scene image
   mood: Mood;
+  generatedImageUrl?: string; // AI-generated comic book image
 
   // Choices
   options: Option[];
