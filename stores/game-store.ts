@@ -4,7 +4,6 @@ import { GameState } from '@/types/game';
 import { ConsequenceResult } from '@/types/consequence';
 import { createInitialGameState } from '@/lib/game-engine/initial-state';
 import { processChoice } from '@/lib/game-engine/turn-processor';
-import { processCustomAction } from '@/lib/game-engine/custom-action-processor';
 
 interface GameStore {
   // State
@@ -114,7 +113,23 @@ export const useGameStore = create<GameStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          const result: ConsequenceResult = await processCustomAction(input, current);
+          // Call server-side API route for custom action processing
+          const response = await fetch('/api/process-custom-action', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              input,
+              gameState: current,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to process custom action');
+          }
+
+          const result: ConsequenceResult = await response.json();
 
           if (!result.feasible) {
             set({
