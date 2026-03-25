@@ -1,11 +1,13 @@
 import { Turn } from '@/types/turn';
 import { turn01 } from './turn-01';
+import { turn02 } from './turn-02';
 
 /**
  * Map of all turns in the game
  */
 const TURNS: Record<number, Turn> = {
   1: turn01,
+  2: turn02,
   // More turns will be added here
 };
 
