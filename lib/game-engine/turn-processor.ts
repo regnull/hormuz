@@ -52,6 +52,23 @@ export async function processChoice(
     timestamp: new Date(),
   });
 
+  // Record turn history with full context for LLM
+  newState.turnHistory.push({
+    turnNumber: state.currentTurn,
+    title: currentTurn.title,
+    situation: currentTurn.situation,
+    chosenOption: {
+      id: option.id,
+      label: option.label,
+    },
+    worldStateSnapshot: {
+      iranEnrichmentLevel: state.worldState.iranEnrichmentLevel,
+      israelStrikeReadiness: state.worldState.israelStrikeReadiness,
+      threatLevel: state.worldState.threatLevel,
+      daysElapsed: state.worldState.daysElapsed,
+    },
+  });
+
   // Advance to next turn
   if (option.nextTurnId) {
     newState.currentTurn = option.nextTurnId;

@@ -82,10 +82,23 @@ Tone: Professional but human. The President is under enormous pressure.
 `;
 
 function buildNarrativeContext(gameState: GameState, storyArc: string): string {
-  const { worldState, actors, choiceHistory, currentTurn } = gameState;
+  const { worldState, actors, turnHistory, currentTurn } = gameState;
 
-  const lastChoice = choiceHistory[choiceHistory.length - 1];
-  const lastAction = lastChoice ? lastChoice.optionId : 'none';
+  // Build complete turn-by-turn history
+  const historyText = turnHistory.length > 0
+    ? turnHistory.map(entry => `
+**Turn ${entry.turnNumber}: ${entry.title}**
+Days Elapsed: ${entry.worldStateSnapshot.daysElapsed}
+Iran Enrichment: ${entry.worldStateSnapshot.iranEnrichmentLevel}%
+Threat Level: ${entry.worldStateSnapshot.threatLevel}
+
+Situation:
+${entry.situation}
+
+President's Decision:
+${entry.chosenOption.label}
+`).join('\n---\n')
+    : 'This is the first turn.';
 
   return `
 **Context for Turn ${currentTurn} Narrative:**
@@ -93,7 +106,12 @@ function buildNarrativeContext(gameState: GameState, storyArc: string): string {
 Story Arc: ${storyArc}
 Days Elapsed: ${worldState.daysElapsed}
 
-**Current Situation:**
+**COMPLETE TURN HISTORY:**
+${historyText}
+
+---
+
+**Current World State (After Previous Decisions):**
 - Iran Enrichment: ${worldState.iranEnrichmentLevel}%
 - Israel Strike Readiness: ${worldState.israelStrikeReadiness}%
 - Oil Price: $${worldState.oilPrice}/barrel
@@ -104,19 +122,20 @@ Days Elapsed: ${worldState.daysElapsed}
 - Iran: ${actors.iran.attitude}/100 (${actors.iran.attitude > 0 ? 'cooperative' : 'hostile'})
 - Israel: ${actors.israel.attitude}/100 (${actors.israel.attitude > 0 ? 'allied' : 'strained'})
 - Saudi Arabia: ${actors.saudi.attitude}/100
-
-**Recent Player Decision (Turn ${lastChoice?.turnNumber || 'N/A'}):**
-${lastAction}
+- Russia: ${actors.russia.attitude}/100
+- China: ${actors.china.attitude}/100
 
 **What Should Happen Next:**
 ${getStoryArcGuidance(storyArc, gameState)}
 
 Write a compelling situation report (300-400 words) for the President that:
-1. Describes what has happened since the last decision
-2. Explains the current state of the crisis
-3. Includes 2-3 brief advisor quotes
-4. Sets up the tension for the next choice
+1. References and builds upon what happened in previous turns
+2. Describes what has happened since the last decision and its consequences
+3. Explains the current state of the crisis
+4. Includes 2-3 brief advisor quotes
+5. Sets up the tension for the next choice
 
+IMPORTANT: This narrative should feel like a direct continuation of the story.
 Make it feel real, urgent, and consequential.
   `.trim();
 }

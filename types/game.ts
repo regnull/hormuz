@@ -16,6 +16,9 @@ export interface GameState {
   // Player decisions
   choiceHistory: Choice[];
 
+  // Turn history with full context for LLM
+  turnHistory: TurnHistoryEntry[];
+
   // World state
   actors: Record<ActorId, ActorState>;
   worldState: WorldState;
@@ -34,6 +37,22 @@ export interface Choice {
   turnNumber: number;
   optionId: string;
   timestamp: Date;
+}
+
+export interface TurnHistoryEntry {
+  turnNumber: number;
+  title: string;
+  situation: string;
+  chosenOption: {
+    id: string;
+    label: string;
+  };
+  worldStateSnapshot: {
+    iranEnrichmentLevel: number;
+    israelStrikeReadiness: number;
+    threatLevel: ThreatLevel;
+    daysElapsed: number;
+  };
 }
 
 export type ActorId =

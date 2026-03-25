@@ -2,6 +2,7 @@ import { GameState } from '@/types/game';
 import { Turn, Option } from '@/types/turn';
 import { generateTurnNarrative } from './narrative-generator';
 import { generateOptions } from './option-generator';
+import { generateAIOptions } from './ai-option-generator';
 import { determineStoryArc } from './story-arc';
 import { generateTurnImage, getCachedTurnImage, cacheTurnImage } from './image-generator';
 
@@ -23,8 +24,18 @@ export async function generateTurn(gameState: GameState): Promise<Turn> {
   const situation = await generateTurnNarrative(gameState, storyArc);
   console.log(`[Turn Generator] Narrative generated (${situation.length} chars)`);
 
+  // Generate options via LLM (with fallback to templates)
+  console.log(`[Turn Generator] Generating options via LLM...`);
+  let options = await generateAIOptions(gameState, storyArc);
+
+  if (!options) {
+    console.log(`[Turn Generator] AI options failed, using template options`);
+    options = generateOptions(gameState, storyArc);
+  } else {
+    console.log(`[Turn Generator] AI options generated (${options.length} options)`);
+  }
+
   const title = generateTurnTitle(gameState, storyArc);
-  const options = generateOptions(gameState, storyArc);
   const intelligence = generateIntelligenceBriefs(gameState);
   const scene = determineScene(gameState);
   const mood = determineMood(gameState);

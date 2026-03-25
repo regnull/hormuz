@@ -13,6 +13,7 @@ export function createInitialGameState(): GameState {
     endingType: null,
 
     choiceHistory: [],
+    turnHistory: [],
 
     actors: createInitialActors(),
     worldState: {
