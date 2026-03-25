@@ -33,6 +33,13 @@ export function SceneImage({ scene, mood, className = '', generatedImageUrl }: S
   const gradient = sceneGradients[scene as keyof typeof sceneGradients] || sceneGradients['situation-room'];
   const filter = moodFilters[mood];
 
+  // Debug logging
+  if (generatedImageUrl) {
+    console.log('[SceneImage] Displaying AI-generated image:', generatedImageUrl.substring(0, 60) + '...');
+  } else {
+    console.log('[SceneImage] No AI image, using gradient:', gradient);
+  }
+
   return (
     <div className={`absolute inset-0 -z-10 ${className}`}>
       {/* AI-generated image or gradient background */}

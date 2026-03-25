@@ -47,6 +47,12 @@ export default function GamePage() {
       setLoadingTurn(true);
       try {
         const turn = await getTurnData(gameState.currentTurn, gameState);
+        console.log('[Game Page] Turn loaded:', {
+          turnNumber: turn.id,
+          title: turn.title,
+          hasGeneratedImage: !!(turn as any).generatedImageUrl,
+          imageUrl: (turn as any).generatedImageUrl ? (turn as any).generatedImageUrl.substring(0, 60) + '...' : 'none',
+        });
         setCurrentTurn(turn);
       } catch (error) {
         console.error('Failed to load turn:', error);
