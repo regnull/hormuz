@@ -88,11 +88,20 @@ export default function GamePage() {
   if (!gameState || loadingTurn) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-slate-400">
-            {!gameState ? 'Initializing game...' : 'Loading turn...'}
-          </p>
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto"></div>
+          <div className="space-y-2">
+            <p className="text-slate-300 text-lg">
+              {!gameState ? 'Initializing game...' : 'Generating turn...'}
+            </p>
+            {loadingTurn && (
+              <>
+                <p className="text-slate-500 text-sm">Creating AI narrative and artwork</p>
+                <p className="text-slate-600 text-xs">This may take 5-15 seconds</p>
+                <p className="text-slate-700 text-xs mt-2">Check browser console for progress</p>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );

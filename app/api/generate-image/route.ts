@@ -1,0 +1,101 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { GameState } from '@/types/game';
+
+/**
+ * API route for server-side image generation
+ * This keeps the OPENAI_API_KEY secure on the server
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const { gameState, turnTitle, situation } = await request.json();
+
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      console.warn('[API] No OPENAI_API_KEY found');
+      return NextResponse.json({ imageUrl: null });
+    }
+
+    const prompt = buildImagePrompt(gameState, turnTitle, situation);
+    console.log('[API] Generating image with DALL-E...');
+
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'dall-e-3',
+        prompt,
+        n: 1,
+        size: '1792x1024',
+        quality: 'standard',
+        style: 'vivid',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[API] DALL-E Error:', response.status, errorText);
+      return NextResponse.json({ error: 'Image generation failed', imageUrl: null }, { status: response.status });
+    }
+
+    const data = await response.json();
+    const imageUrl = data.data[0]?.url || null;
+
+    console.log('[API] ✅ Image generated successfully');
+
+    return NextResponse.json({ imageUrl });
+  } catch (error) {
+    console.error('[API] Error generating image:', error);
+    return NextResponse.json({ error: 'Internal error', imageUrl: null }, { status: 500 });
+  }
+}
+
+function buildImagePrompt(
+  gameState: GameState,
+  turnTitle: string,
+  situation: string
+): string {
+  const { worldState, actors } = gameState;
+
+  // Determine scene type based on context
+  let sceneDescription = '';
+
+  if (worldState.threatLevel === 'critical' || worldState.iranEnrichmentLevel >= 95) {
+    sceneDescription = 'Tense war room with military commanders around illuminated maps, red alert lights casting dramatic shadows';
+  } else if (situation.toLowerCase().includes('diplomatic') || situation.toLowerCase().includes('summit')) {
+    sceneDescription = 'High-stakes diplomatic meeting room with flags and serious officials across negotiating table';
+  } else if (situation.toLowerCase().includes('strike') || situation.toLowerCase().includes('military')) {
+    sceneDescription = 'Military command center with glowing screens showing satellite imagery of Middle East, commanders in uniform';
+  } else if (actors.israel.attitude < 0 || actors.iran.attitude < -70) {
+    sceneDescription = 'Dark situation room with world map projection showing Middle East in red, silhouettes of worried advisors';
+  } else {
+    sceneDescription = 'Presidential situation room with advisors presenting intelligence briefings, large screens showing data';
+  }
+
+  const stylePrompt = `
+Comic book style illustration in the aesthetic of DC Comics graphic novels.
+Dark, moody atmosphere with dramatic lighting and deep shadows.
+Limited color palette: predominantly dark blues, slate grays, blacks, with amber/warm accent lighting.
+Strong contrast and bold ink lines with crosshatching for shadows.
+Cinematic composition with dramatic perspective.
+Urban/government building setting with architectural details.
+Serious, tense mood conveying high stakes and danger.
+Professional illustration quality with clear details but stylized like a graphic novel panel.
+  `.trim();
+
+  return `${sceneDescription}. ${stylePrompt}
+
+Scene context: ${turnTitle} - ${situation.substring(0, 200)}...
+
+IMPORTANT:
+- Graphic novel/comic book art style like Batman: The Dark Knight Returns
+- Dark and moody with blue-gray-black color scheme
+- Dramatic shadows and lighting
+- No text or speech bubbles
+- Professional illustration quality
+- Convey tension and high stakes
+- Geopolitical crisis atmosphere`;
+}
