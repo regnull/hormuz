@@ -1,20 +1,33 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from '@/stores/game-store';
 import { getTurnData } from '@/lib/data/turns/index';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { CustomActionInput } from '@/components/game/CustomActionInput';
+import { CustomActionResult } from '@/components/game/CustomActionResult';
+import { AchievementToast } from '@/components/game/AchievementToast';
+import { SceneImage } from '@/components/shared/SceneImage';
+import { ChoiceCard } from '@/components/game/ChoiceCard';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Achievement } from '@/types/game';
 
 export default function GamePage() {
   const {
     gameState,
     isLoading,
     error,
+    customActionResult,
     initializeGame,
     makeChoice,
+    processCustomActionInput,
     clearError,
+    clearCustomActionResult,
   } = useGameStore();
+
+  const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
+  const [previousAchievementCount, setPreviousAchievementCount] = useState(0);
 
   useEffect(() => {
     // Initialize game if no state exists
@@ -22,6 +35,33 @@ export default function GamePage() {
       initializeGame();
     }
   }, [gameState, initializeGame]);
+
+  // Track new achievements
+  useEffect(() => {
+    if (!gameState) return;
+
+    const currentCount = gameState.achievements.length;
+    if (currentCount > previousAchievementCount) {
+      // New achievement(s) unlocked
+      const newOnes = gameState.achievements.slice(previousAchievementCount);
+      setNewAchievements(newOnes);
+    }
+    setPreviousAchievementCount(currentCount);
+  }, [gameState?.achievements, previousAchievementCount]);
+
+  const handleCustomAction = async (input: string) => {
+    await processCustomActionInput(input);
+  };
+
+  const closeAchievement = (achievementId: string) => {
+    setNewAchievements(prev => prev.filter(a => a.id !== achievementId));
+  };
+
+  // Check if custom actions are enabled
+  const customActionsEnabled = process.env.NEXT_PUBLIC_ENABLE_CUSTOM_ACTIONS === 'true';
+  const maxCustomActions = parseInt(process.env.NEXT_PUBLIC_MAX_CUSTOM_ACTIONS || '3');
+  const customActionsUsed = gameState?.choiceHistory.filter(c => c.optionId.startsWith('custom:')).length || 0;
+  const remainingCustomActions = maxCustomActions - customActionsUsed;
 
   if (!gameState) {
     return (
@@ -50,7 +90,10 @@ export default function GamePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-slate-950 relative">
+      {/* Scene Background */}
+      <SceneImage scene={currentTurn.sceneImage} mood={currentTurn.mood} />
+
       {/* Header */}
       <div className="border-b border-slate-800 bg-slate-900/50">
         <div className="container mx-auto px-4 py-4">
@@ -158,50 +201,38 @@ export default function GamePage() {
           </div>
 
           {/* Choices */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             <h2 className="text-xl font-semibold text-slate-200 mb-4">Your Options</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {currentTurn.options.map((option: any) => (
-                <button
+              {currentTurn.options.map((option: any, index: number) => (
+                <motion.div
                   key={option.id}
-                  onClick={() => makeChoice(option.id)}
-                  disabled={isLoading}
-                  className={`
-                    p-6 rounded-lg border-2 text-left transition-all
-                    hover:scale-[1.02] active:scale-[0.98]
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    ${
-                      option.risk === 'critical' ? 'border-red-500 bg-red-500/10 hover:bg-red-500/20' :
-                      option.risk === 'high' ? 'border-orange-500 bg-orange-500/10 hover:bg-orange-500/20' :
-                      option.risk === 'medium' ? 'border-yellow-500 bg-yellow-500/10 hover:bg-yellow-500/20' :
-                      'border-green-500 bg-green-500/10 hover:bg-green-500/20'
-                    }
-                  `}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + index * 0.1 }}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-bold text-lg text-slate-100">{option.label}</h3>
-                    <span className={`
-                      text-xs px-2 py-1 rounded uppercase font-semibold
-                      ${option.risk === 'critical' ? 'bg-red-500 text-white' : ''}
-                      ${option.risk === 'high' ? 'bg-orange-500 text-white' : ''}
-                      ${option.risk === 'medium' ? 'bg-yellow-500 text-black' : ''}
-                      ${option.risk === 'low' ? 'bg-green-500 text-white' : ''}
-                    `}>
-                      {option.risk} risk
-                    </span>
-                  </div>
-
-                  <p className="text-sm text-slate-300 whitespace-pre-line mb-3">
-                    {option.description}
-                  </p>
-
-                  <div className="text-xs uppercase tracking-wide text-slate-400">
-                    {option.type} option
-                  </div>
-                </button>
+                  <ChoiceCard
+                    option={option}
+                    onClick={() => makeChoice(option.id)}
+                    disabled={isLoading}
+                  />
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
+
+          {/* Custom Action Input */}
+          <CustomActionInput
+            onSubmit={handleCustomAction}
+            isLoading={isLoading}
+            isEnabled={customActionsEnabled}
+            remainingActions={remainingCustomActions}
+            maxActions={maxCustomActions}
+          />
 
           {/* Loading state */}
           {isLoading && (
@@ -212,6 +243,28 @@ export default function GamePage() {
               </div>
             </div>
           )}
+
+          {/* Custom Action Result Modal */}
+          <AnimatePresence>
+            {customActionResult && (
+              <CustomActionResult
+                success={customActionResult.success}
+                message={customActionResult.message}
+                onClose={clearCustomActionResult}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Achievement Toasts */}
+          <AnimatePresence>
+            {newAchievements.map((achievement) => (
+              <AchievementToast
+                key={achievement.id}
+                achievement={achievement}
+                onClose={() => closeAchievement(achievement.id)}
+              />
+            ))}
+          </AnimatePresence>
         </div>
       </div>
     </div>
