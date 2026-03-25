@@ -1,26 +1,38 @@
 import { Turn } from '@/types/turn';
+import { GameState } from '@/types/game';
 import { turn01 } from './turn-01';
-import { turn02 } from './turn-02';
+import { generateTurn } from '@/lib/game-engine/turn-generator';
 
 /**
- * Map of all turns in the game
+ * Get turn data - uses fixed Turn 1, then dynamic generation
  */
-const TURNS: Record<number, Turn> = {
-  1: turn01,
-  2: turn02,
-  // More turns will be added here
-};
+export async function getTurnData(turnNumber: number, gameState?: GameState): Promise<Turn | null> {
+  // Turn 1 is always the fixed introduction
+  if (turnNumber === 1) {
+    return turn01;
+  }
 
-/**
- * Get turn data by turn number
- */
-export function getTurnData(turnNumber: number): Turn | null {
-  return TURNS[turnNumber] || null;
+  // For turns 2+, generate dynamically based on game state
+  if (!gameState) {
+    console.error('Game state required for dynamic turn generation');
+    return null;
+  }
+
+  try {
+    return await generateTurn(gameState);
+  } catch (error) {
+    console.error(`Error generating turn ${turnNumber}:`, error);
+    return null;
+  }
 }
 
 /**
- * Get all available turn numbers
+ * Synchronous version for backward compatibility
+ * Returns Turn 1 or null (use async version for Turn 2+)
  */
-export function getAvailableTurns(): number[] {
-  return Object.keys(TURNS).map(Number).sort((a, b) => a - b);
+export function getTurnDataSync(turnNumber: number): Turn | null {
+  if (turnNumber === 1) {
+    return turn01;
+  }
+  return null;
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '@/stores/game-store';
 import { getTurnData } from '@/lib/data/turns/index';
+import { Turn } from '@/types/turn';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { CustomActionInput } from '@/components/game/CustomActionInput';
@@ -28,6 +29,8 @@ export default function GamePage() {
 
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
   const [previousAchievementCount, setPreviousAchievementCount] = useState(0);
+  const [currentTurn, setCurrentTurn] = useState<Turn | null>(null);
+  const [loadingTurn, setLoadingTurn] = useState(false);
 
   useEffect(() => {
     // Initialize game if no state exists
@@ -35,6 +38,25 @@ export default function GamePage() {
       initializeGame();
     }
   }, [gameState, initializeGame]);
+
+  // Load current turn (async for dynamic generation)
+  useEffect(() => {
+    if (!gameState) return;
+
+    const loadTurn = async () => {
+      setLoadingTurn(true);
+      try {
+        const turn = await getTurnData(gameState.currentTurn, gameState);
+        setCurrentTurn(turn);
+      } catch (error) {
+        console.error('Failed to load turn:', error);
+      } finally {
+        setLoadingTurn(false);
+      }
+    };
+
+    loadTurn();
+  }, [gameState?.currentTurn]);
 
   // Track new achievements
   useEffect(() => {
@@ -63,18 +85,18 @@ export default function GamePage() {
   const customActionsUsed = gameState?.choiceHistory.filter(c => c.optionId.startsWith('custom:')).length || 0;
   const remainingCustomActions = maxCustomActions - customActionsUsed;
 
-  if (!gameState) {
+  if (!gameState || loadingTurn) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-slate-400">Initializing game...</p>
+          <p className="mt-4 text-slate-400">
+            {!gameState ? 'Initializing game...' : 'Loading turn...'}
+          </p>
         </div>
       </div>
     );
   }
-
-  const currentTurn = getTurnData(gameState.currentTurn);
 
   if (!currentTurn) {
     return (

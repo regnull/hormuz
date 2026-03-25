@@ -11,8 +11,8 @@ export async function processChoice(
   state: GameState,
   optionId: string
 ): Promise<GameState> {
-  // Get current turn data
-  const currentTurn = getTurnData(state.currentTurn);
+  // Get current turn data (async for dynamic generation)
+  const currentTurn = await getTurnData(state.currentTurn, state);
   if (!currentTurn) {
     throw new Error(`Turn ${state.currentTurn} not found`);
   }
