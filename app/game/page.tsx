@@ -33,11 +33,11 @@ export default function GamePage() {
   const [loadingTurn, setLoadingTurn] = useState(false);
 
   useEffect(() => {
-    // Initialize game if no state exists
-    if (!gameState) {
+    // Initialize game if no state exists or if it's marked as ended
+    if (!gameState || gameState.gameStatus === 'menu') {
       initializeGame();
     }
-  }, [gameState, initializeGame]);
+  }, [gameState?.gameStatus, initializeGame]);
 
   // Load current turn (async for dynamic generation)
   useEffect(() => {

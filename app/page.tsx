@@ -1,7 +1,19 @@
+'use client';
+
 import Link from "next/link";
 import { Shield } from "lucide-react";
+import { useGameStore } from "@/stores/game-store";
+import { clearCachedImages } from "@/lib/game-engine/image-generator";
 
 export default function Home() {
+  const { resetGame } = useGameStore();
+
+  const handleNewGame = () => {
+    // Reset game state
+    resetGame();
+    // Clear cached images
+    clearCachedImages();
+  };
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full text-center space-y-8">
@@ -36,6 +48,7 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/game"
+            onClick={handleNewGame}
             className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold text-lg transition-colors"
           >
             New Game

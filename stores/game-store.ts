@@ -172,10 +172,16 @@ export const useGameStore = create<GameStore>()(
 
       // Reset to menu
       resetGame: () => {
+        // Clear localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('hormuz-game-storage');
+        }
+
         set({
           gameState: null,
           error: null,
           customActionResult: null,
+          isLoading: false,
         });
       },
 
