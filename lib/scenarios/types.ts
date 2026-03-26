@@ -31,4 +31,5 @@ export interface Choice {
   label: string;
   description: string;
   consequences?: string;
+  risk?: 'low' | 'medium' | 'high' | 'critical';
 }

@@ -10,10 +10,6 @@ interface GameStore {
   gameState: GameState | null;
   isLoading: boolean;
   error: string | null;
-  customActionResult: {
-    success: boolean;
-    message: string;
-  } | null;
 
   // Actions
   initializeGame: () => void;
@@ -23,7 +19,6 @@ interface GameStore {
   resetGame: () => void;
   loadGame: (savedState: GameState) => void;
   clearError: () => void;
-  clearCustomActionResult: () => void;
 }
 
 export const useGameStore = create<GameStore>()(
@@ -33,7 +28,6 @@ export const useGameStore = create<GameStore>()(
       gameState: null,
       isLoading: false,
       error: null,
-      customActionResult: null,
 
       // Initialize a new game
       initializeGame: () => {
@@ -47,7 +41,6 @@ export const useGameStore = create<GameStore>()(
         set({
           gameState: newState,
           error: null,
-          customActionResult: null,
         });
         console.log('[Game Store] 💾 State saved to store');
       },
@@ -89,7 +82,7 @@ export const useGameStore = create<GameStore>()(
         }
       },
 
-      // Process a custom action (free-form input)
+      // Process a custom action (free-form input) - same as regular choice
       processCustomActionInput: async (input: string) => {
         const current = get().gameState;
         if (!current) {
@@ -100,85 +93,40 @@ export const useGameStore = create<GameStore>()(
         // Check if custom actions are enabled
         const enabled = process.env.NEXT_PUBLIC_ENABLE_CUSTOM_ACTIONS === 'true';
         if (!enabled) {
-          set({
-            customActionResult: {
-              success: false,
-              message: 'Custom actions are not enabled. Please set NEXT_PUBLIC_ENABLE_CUSTOM_ACTIONS=true',
-            }
-          });
+          set({ error: 'Custom actions are not enabled' });
           return;
         }
 
-        // Check political capital
+        // Check custom action limit
         const maxCustomActions = parseInt(process.env.NEXT_PUBLIC_MAX_CUSTOM_ACTIONS || '3');
         const customActionsUsed = current.choiceHistory.filter(c => c.optionId.startsWith('custom:')).length;
 
         if (customActionsUsed >= maxCustomActions) {
-          set({
-            customActionResult: {
-              success: false,
-              message: `You have used all ${maxCustomActions} custom actions for this game.`,
-            }
-          });
+          set({ error: `You have used all ${maxCustomActions} custom actions for this game` });
           return;
         }
 
+        console.log('[Game Store] 🎯 Processing custom action:', input);
+
+        // Process custom action exactly like a regular choice
+        // Just use the input text as the choice label and let the LLM handle it
         set({ isLoading: true, error: null });
 
         try {
-          // Call server-side API route for custom action processing
-          const response = await fetch('/api/process-custom-action', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              input,
-              gameState: current,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to process custom action');
-          }
-
-          const result: ConsequenceResult = await response.json();
-
-          if (!result.feasible) {
-            set({
-              customActionResult: {
-                success: false,
-                message: result.narrative,
-              },
-              isLoading: false,
-            });
-            return;
-          }
-
-          // Apply the custom action
-          const updatedState = applyConsequence(current, result, input);
+          // Process the choice using generic engine (same as regular choices)
+          const choiceLabel = `Custom Action: ${input}`;
+          const updatedState = processGenericChoice(current, choiceLabel);
 
           set({
             gameState: updatedState,
-            customActionResult: {
-              success: true,
-              message: result.narrative,
-            },
             isLoading: false,
           });
 
-          // Check if game should end
-          if (shouldEndGame(updatedState)) {
-            get().endGame();
-          }
+          console.log('[Game Store] ✅ Custom action processed, advancing to next turn');
         } catch (error) {
-          console.error('Error processing custom action:', error);
+          console.error('[Game Store] ❌ Error processing custom action:', error);
           set({
             error: error instanceof Error ? error.message : 'Failed to process custom action',
-            customActionResult: {
-              success: false,
-              message: 'Failed to process action. Please try again.',
-            },
             isLoading: false,
           });
         }
@@ -208,7 +156,6 @@ export const useGameStore = create<GameStore>()(
         set({
           gameState: null,
           error: null,
-          customActionResult: null,
           isLoading: false,
         });
       },
@@ -218,18 +165,12 @@ export const useGameStore = create<GameStore>()(
         set({
           gameState: savedState,
           error: null,
-          customActionResult: null,
         });
       },
 
       // Clear error
       clearError: () => {
         set({ error: null });
-      },
-
-      // Clear custom action result
-      clearCustomActionResult: () => {
-        set({ customActionResult: null });
       },
     }),
     {

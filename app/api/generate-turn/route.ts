@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateGenericTurn } from '@/lib/game-engine/generic-turn-generator';
 import { getScenario } from '@/lib/game-engine/generic-turn-processor';
 import { GameState } from '@/types/game';
+import { log, logError, logEvent } from '@/lib/utils/logger';
 
 /**
  * API route for server-side turn generation
@@ -10,43 +11,38 @@ import { GameState } from '@/types/game';
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   try {
-    console.log('[Turn API] 📥 Received turn generation request');
+    await log('Turn API', 'Received turn generation request');
     const { gameState } = await request.json();
 
-    console.log(`[Turn API] 🎲 Generating turn ${gameState.currentTurn} for scenario: ${gameState.scenarioId}`);
-    console.log(`[Turn API] 📊 Conversation history: ${gameState.conversationHistory.length} turns`);
+    await logEvent('Turn API', 'Generating turn', {
+      turnNumber: gameState.currentTurn,
+      scenarioId: gameState.scenarioId,
+      conversationHistoryLength: gameState.conversationHistory.length,
+    });
 
     // Get scenario configuration
-    console.log('[Turn API] 📖 Loading scenario configuration...');
     const scenario = getScenario(gameState.scenarioId);
-    console.log(`[Turn API] ✅ Scenario loaded: ${scenario.name}`);
+    await log('Turn API', `Scenario loaded: ${scenario.name}`);
 
     // Generate turn using LLM
-    console.log('[Turn API] 🤖 Calling LLM to generate turn...');
     const llmStartTime = Date.now();
     const turnResponse = await generateGenericTurn(scenario, gameState);
     const llmElapsed = Date.now() - llmStartTime;
 
-    console.log(`[Turn API] ✅ LLM responded in ${llmElapsed}ms`);
-    console.log(`[Turn API] 📝 Turn generated:`, {
+    await logEvent('Turn API', 'Turn generated successfully', {
+      llmTime: llmElapsed,
       situationLength: turnResponse.situation.length,
       choicesCount: turnResponse.choices.length,
       gameStatus: turnResponse.gameStatus,
     });
 
     const totalElapsed = Date.now() - startTime;
-    console.log(`[Turn API] 🎉 Total API time: ${totalElapsed}ms`);
+    await log('Turn API', `Total API time: ${totalElapsed}ms`);
 
     return NextResponse.json(turnResponse);
   } catch (error) {
     const totalElapsed = Date.now() - startTime;
-    console.error(`[Turn API] ❌ Error after ${totalElapsed}ms:`, error);
-    if (error instanceof Error) {
-      console.error('[Turn API] 📋 Error details:', {
-        name: error.name,
-        message: error.message,
-      });
-    }
+    await logError('Turn API', `Error after ${totalElapsed}ms`, error);
     return NextResponse.json(
       {
         error: 'Failed to generate turn',

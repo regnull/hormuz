@@ -7,7 +7,6 @@ import { Turn } from '@/types/turn';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { CustomActionInput } from '@/components/game/CustomActionInput';
-import { CustomActionResult } from '@/components/game/CustomActionResult';
 import { AchievementToast } from '@/components/game/AchievementToast';
 import { SceneImage } from '@/components/shared/SceneImage';
 import { ChoiceCard } from '@/components/game/ChoiceCard';
@@ -19,12 +18,10 @@ export default function GamePage() {
     gameState,
     isLoading,
     error,
-    customActionResult,
     initializeGame,
     makeChoice,
     processCustomActionInput,
     clearError,
-    clearCustomActionResult,
   } = useGameStore();
 
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
@@ -305,17 +302,6 @@ export default function GamePage() {
               </div>
             </div>
           )}
-
-          {/* Custom Action Result Modal */}
-          <AnimatePresence>
-            {customActionResult && (
-              <CustomActionResult
-                success={customActionResult.success}
-                message={customActionResult.message}
-                onClose={clearCustomActionResult}
-              />
-            )}
-          </AnimatePresence>
 
           {/* Achievement Toasts */}
           <AnimatePresence>

@@ -118,7 +118,8 @@ Use present tense. Include specific details. Reference the player's previous dec
       "id": "turn-X-choice-1",
       "label": "Short action title (3-6 words)",
       "description": "Detailed explanation of what this choice entails. Include bullet points for clarity. Explain the approach, what happens immediately, and likely consequences. Be honest about risks.",
-      "consequences": "Brief 1-2 sentence preview of what might happen if chosen"
+      "consequences": "Brief 1-2 sentence preview of what might happen if chosen",
+      "risk": "low|medium|high|critical"
     }
   ],
 

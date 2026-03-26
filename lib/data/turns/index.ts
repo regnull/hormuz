@@ -60,16 +60,19 @@ export async function getTurnData(turnNumber: number, gameState: GameState): Pro
     }
 
     // Convert TurnResponse choices to Turn options
-    const options = turnResponse.choices.map((choice, index) => ({
-      id: choice.id,
-      label: choice.label,
-      description: choice.description + (choice.consequences ? `\n\n**Likely outcome:** ${choice.consequences}` : ''),
-      type: 'diplomatic' as const, // Generic type for now
-      effects: [], // Effects determined by LLM
-      scoreImpact: {},
-      icon: 'shield',
-      risk: 'medium' as const,
-    }));
+    const options = turnResponse.choices.map((choice, index) => {
+      const risk = choice.risk || 'medium';
+      return {
+        id: choice.id,
+        label: choice.label,
+        description: choice.description + (choice.consequences ? `\n\n**Likely outcome:** ${choice.consequences}` : ''),
+        type: 'diplomatic' as const, // Generic type for now
+        effects: [], // Effects determined by LLM
+        scoreImpact: {},
+        icon: 'shield',
+        risk: risk as 'low' | 'medium' | 'high' | 'critical',
+      };
+    });
 
     // Generate image for this turn (if enabled)
     let imageUrl: string | null = null;
