@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { GameState } from '@/types/game';
 import { Option } from '@/types/turn';
+import { MODEL_CONFIG } from '@/lib/config/models';
 
 /**
  * Generate options using AI based on full turn history
@@ -24,7 +25,7 @@ export async function generateAIOptions(
     const context = buildOptionsContext(gameState, storyArc);
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: MODEL_CONFIG.name,
       max_tokens: 2500,
       system: OPTIONS_SYSTEM_PROMPT,
       messages: [

@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { GameScenario, ConversationTurn, TurnResponse } from '@/lib/scenarios/types';
 import { GameState } from '@/types/game';
+import { MODEL_CONFIG } from '@/lib/config/models';
 
 /**
  * Generic turn generator that works with any scenario
@@ -27,15 +28,15 @@ export async function generateGenericTurn(
 
   console.log(`[Generic Turn Generator] 📤 Sending ${messages.length} messages to LLM`);
   console.log(`[Generic Turn Generator] 📚 Conversation history has ${gameState.conversationHistory.length} turns`);
-  console.log(`[Generic Turn Generator] 🤖 Model: claude-sonnet-4-5-20250929`);
+  console.log(`[Generic Turn Generator] 🤖 Model: ${MODEL_CONFIG.name}`);
   console.log(`[Generic Turn Generator] 📏 System prompt length: ${scenario.systemPrompt.length} chars`);
 
   try {
     console.log('[Generic Turn Generator] ⏳ Waiting for LLM response...');
     const llmStartTime = Date.now();
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 3500,
+      model: MODEL_CONFIG.name,
+      max_tokens: MODEL_CONFIG.maxTokens,
       system: scenario.systemPrompt,
       messages: messages,
       temperature: 0.8,

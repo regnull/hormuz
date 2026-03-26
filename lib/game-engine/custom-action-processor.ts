@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { GameState } from '@/types/game';
 import { ConsequenceResult, CustomActionResponse } from '@/types/consequence';
+import { MODEL_CONFIG } from '@/lib/config/models';
 
 /**
  * Process a custom action using Claude API
@@ -48,7 +49,7 @@ export async function processCustomAction(
 
     // Call Claude API
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: MODEL_CONFIG.name,
       max_tokens: 2000,
       system: GAME_MASTER_SYSTEM_PROMPT,
       messages: [

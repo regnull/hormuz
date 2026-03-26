@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { GameState } from '@/types/game';
+import { MODEL_CONFIG } from '@/lib/config/models';
 
 /**
  * Generate turn narrative dynamically
@@ -39,7 +40,7 @@ async function generateAINarrative(
   const context = buildNarrativeContext(gameState, storyArc);
 
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
+    model: MODEL_CONFIG.name,
     max_tokens: 1500,
     system: NARRATIVE_SYSTEM_PROMPT,
     messages: [
