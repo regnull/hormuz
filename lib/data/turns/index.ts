@@ -113,7 +113,12 @@ export async function getTurnData(turnNumber: number, gameState: GameState): Pro
       id: turnNumber,
       title: `Turn ${turnNumber}`,
       situation: turnResponse.situation,
-      intelligence: [], // No intelligence briefs in generic engine
+      intelligence: turnResponse.intelligence.map(brief => ({
+        source: brief.source,
+        content: brief.content,
+        reliability: brief.reliability,
+        icon: 'alert-circle', // Default icon
+      })),
       sceneImage: 'situation-room',
       mood: determineMood(),
       options,

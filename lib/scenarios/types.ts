@@ -20,10 +20,17 @@ export interface ConversationTurn {
 
 export interface TurnResponse {
   situation: string;
+  intelligence: IntelligenceBrief[];
   choices: Choice[];
   gameStatus: 'continue' | 'ended';
   endingType?: 'victory' | 'defeat' | 'stalemate' | 'disaster' | string;
   endingNarrative?: string;
+}
+
+export interface IntelligenceBrief {
+  source: string;
+  content: string;
+  reliability: 'confirmed' | 'likely' | 'possible' | 'rumor';
 }
 
 export interface Choice {

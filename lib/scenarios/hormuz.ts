@@ -113,6 +113,14 @@ For example:
 
 Use present tense. Include specific details. Reference the player's previous decision explicitly. Include brief quotes from 2-3 advisors showing diverse perspectives. Build tension. Make it feel urgent and real.",
 
+  "intelligence": [
+    {
+      "source": "CIA|Mossad|CENTCOM|State Department|NSA|Treasury|etc",
+      "content": "Brief intelligence report (1-2 sentences)",
+      "reliability": "confirmed|likely|possible|rumor"
+    }
+  ],
+
   "choices": [
     {
       "id": "turn-X-choice-1",
@@ -140,6 +148,24 @@ Use present tense. Include specific details. Reference the player's previous dec
   "endingNarrative": "Comprehensive 400-600 word description of the outcome. Explain what happened, how we got here, the consequences for the region and world, the President's legacy, and the final state of affairs. Make it satisfying and realistic."
 }
 \`\`\`
+
+# INTELLIGENCE BRIEFS
+
+Always provide 3-5 intelligence briefs that:
+1. Come from realistic sources (CIA, Mossad, CENTCOM, State Dept, NSA, Treasury, etc.)
+2. Provide tactical/strategic information about the current situation
+3. Have appropriate reliability levels:
+   - "confirmed": Verified intelligence
+   - "likely": High confidence assessment
+   - "possible": Unconfirmed reports
+   - "rumor": Unverified information
+4. Are brief (1-2 sentences each)
+5. Add context and flavor to the situation
+
+Examples:
+- CIA: "Iran has moved air defense systems to protect Natanz facility."
+- Mossad: "Israeli PM will call within 24 hours requesting approval for strike."
+- CENTCOM: "U.S. carrier group positioned 200 miles from Strait of Hormuz."
 
 # CHOICE GENERATION GUIDELINES
 

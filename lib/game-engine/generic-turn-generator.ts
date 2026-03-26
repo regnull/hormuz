@@ -143,8 +143,14 @@ function parseTurnResponse(text: string): TurnResponse {
       throw new Error('No ending narrative provided for ended game');
     }
 
+    // Intelligence briefs are optional but should be an array
+    if (!Array.isArray(parsed.intelligence)) {
+      parsed.intelligence = [];
+    }
+
     return {
       situation: parsed.situation,
+      intelligence: parsed.intelligence,
       choices: parsed.choices || [],
       gameStatus: parsed.gameStatus,
       endingType: parsed.endingType || undefined,
@@ -157,6 +163,7 @@ function parseTurnResponse(text: string): TurnResponse {
     // Return a fallback error response
     return {
       situation: 'An error occurred while generating the turn. The system encountered a technical issue.',
+      intelligence: [],
       choices: [
         {
           id: 'error-retry',
