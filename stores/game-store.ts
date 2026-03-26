@@ -37,12 +37,19 @@ export const useGameStore = create<GameStore>()(
 
       // Initialize a new game
       initializeGame: () => {
+        console.log('[Game Store] 🎮 Initializing new game...');
         const newState = createInitialGameState();
+        console.log('[Game Store] ✅ Initial state created:', {
+          scenarioId: newState.scenarioId,
+          currentTurn: newState.currentTurn,
+          gameStatus: newState.gameStatus,
+        });
         set({
           gameState: newState,
           error: null,
           customActionResult: null,
         });
+        console.log('[Game Store] 💾 State saved to store');
       },
 
       // Process a regular choice

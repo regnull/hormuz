@@ -9,9 +9,15 @@ import { generateTurnImage, getCachedTurnImage, cacheTurnImage } from '@/lib/gam
  */
 export async function getTurnData(turnNumber: number, gameState: GameState): Promise<Turn | null> {
   try {
-    console.log(`[getTurnData] Generating turn ${turnNumber}`);
+    console.log(`[getTurnData] 🎲 Starting turn generation for turn ${turnNumber}`);
+    console.log(`[getTurnData] 📊 Game state:`, {
+      scenarioId: gameState.scenarioId,
+      currentTurn: gameState.currentTurn,
+      conversationHistoryLength: gameState.conversationHistory.length,
+    });
 
     // Call server-side API route for turn generation
+    console.log('[getTurnData] 📡 Calling /api/generate-turn...');
     const response = await fetch('/api/generate-turn', {
       method: 'POST',
       headers: {
@@ -22,13 +28,21 @@ export async function getTurnData(turnNumber: number, gameState: GameState): Pro
       }),
     });
 
+    console.log('[getTurnData] 📬 Response received:', response.status);
+
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('[getTurnData] API error:', errorData);
+      console.error('[getTurnData] ❌ API error:', errorData);
       throw new Error(errorData.message || 'Failed to generate turn');
     }
 
+    console.log('[getTurnData] 📖 Parsing turn response...');
     const turnResponse: TurnResponse = await response.json();
+    console.log('[getTurnData] ✅ Turn response parsed:', {
+      situationLength: turnResponse.situation.length,
+      choicesCount: turnResponse.choices.length,
+      gameStatus: turnResponse.gameStatus,
+    });
 
     // If game has ended, return ending turn
     if (turnResponse.gameStatus === 'ended') {
@@ -57,25 +71,31 @@ export async function getTurnData(turnNumber: number, gameState: GameState): Pro
     }));
 
     // Generate image for this turn
-    console.log(`[getTurnData] Generating image for turn ${turnNumber}`);
+    console.log(`[getTurnData] 🎨 Checking for cached image for turn ${turnNumber}...`);
     let imageUrl = getCachedTurnImage(turnNumber);
 
     if (!imageUrl) {
+      console.log(`[getTurnData] 🖼️ No cached image, generating new image...`);
       const title = `Turn ${turnNumber}`;
+      const startTime = Date.now();
+
       imageUrl = await generateTurnImage(
         gameState,
         title,
         turnResponse.situation
       );
 
+      const elapsed = Date.now() - startTime;
+
       if (imageUrl) {
         cacheTurnImage(turnNumber, imageUrl);
-        console.log(`[getTurnData] ✅ Image generated and cached:`, imageUrl);
+        console.log(`[getTurnData] ✅ Image generated in ${elapsed}ms and cached`);
+        console.log(`[getTurnData] 🔗 Image URL:`, imageUrl.substring(0, 80) + '...');
       } else {
-        console.log(`[getTurnData] ⚠️ No image generated`);
+        console.log(`[getTurnData] ⚠️ No image generated (took ${elapsed}ms)`);
       }
     } else {
-      console.log(`[getTurnData] Using cached image`);
+      console.log(`[getTurnData] ♻️ Using cached image:`, imageUrl.substring(0, 80) + '...');
     }
 
     const turn: Turn = {
@@ -97,9 +117,17 @@ export async function getTurnData(turnNumber: number, gameState: GameState): Pro
     // when the player makes a choice
     (gameState as any).currentSituation = turnResponse.situation;
 
+    console.log(`[getTurnData] 🎉 Turn ${turnNumber} fully generated and ready!`);
     return turn;
   } catch (error) {
-    console.error(`[getTurnData] Error generating turn ${turnNumber}:`, error);
+    console.error(`[getTurnData] ❌ Error generating turn ${turnNumber}:`, error);
+    if (error instanceof Error) {
+      console.error(`[getTurnData] 📋 Error details:`, {
+        name: error.name,
+        message: error.message,
+        stack: error.stack?.split('\n').slice(0, 3).join('\n'),
+      });
+    }
     return null;
   }
 }

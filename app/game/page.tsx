@@ -34,32 +34,51 @@ export default function GamePage() {
 
   useEffect(() => {
     // Initialize game if no state exists or if it's marked as ended
+    console.log('[Game Page] 🔍 Checking game state:', {
+      hasGameState: !!gameState,
+      gameStatus: gameState?.gameStatus,
+    });
     if (!gameState || gameState.gameStatus === 'menu') {
+      console.log('[Game Page] 🎮 No game state or menu status, initializing...');
       initializeGame();
     }
   }, [gameState?.gameStatus, initializeGame]);
 
   // Load current turn (async for dynamic generation)
   useEffect(() => {
-    if (!gameState) return;
+    if (!gameState) {
+      console.log('[Game Page] ⏸️ No game state yet, skipping turn load');
+      return;
+    }
+
+    console.log('[Game Page] 📥 Loading turn:', gameState.currentTurn);
 
     const loadTurn = async () => {
       setLoadingTurn(true);
+      console.log('[Game Page] ⏳ Turn loading started for turn', gameState.currentTurn);
+
       try {
+        console.log('[Game Page] 🔄 Calling getTurnData...');
         const turn = await getTurnData(gameState.currentTurn, gameState);
+
         if (turn) {
-          console.log('[Game Page] Turn loaded:', {
+          console.log('[Game Page] ✅ Turn loaded successfully:', {
             turnNumber: turn.id,
             title: turn.title,
+            situationLength: turn.situation.length,
+            optionsCount: turn.options.length,
             hasGeneratedImage: !!(turn as any).generatedImageUrl,
             imageUrl: (turn as any).generatedImageUrl ? (turn as any).generatedImageUrl.substring(0, 60) + '...' : 'none',
           });
           setCurrentTurn(turn);
+        } else {
+          console.error('[Game Page] ❌ getTurnData returned null');
         }
       } catch (error) {
-        console.error('Failed to load turn:', error);
+        console.error('[Game Page] ❌ Failed to load turn:', error);
       } finally {
         setLoadingTurn(false);
+        console.log('[Game Page] 🏁 Turn loading finished');
       }
     };
 

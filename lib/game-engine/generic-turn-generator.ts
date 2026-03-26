@@ -17,17 +17,22 @@ export async function generateGenericTurn(
     throw new Error('ANTHROPIC_API_KEY not configured');
   }
 
-  console.log(`[Generic Turn Generator] Generating turn ${gameState.currentTurn} for scenario: ${scenario.id}`);
+  console.log(`[Generic Turn Generator] 🎲 Generating turn ${gameState.currentTurn} for scenario: ${scenario.id}`);
 
   const anthropic = new Anthropic({ apiKey });
 
   // Build conversation messages from history
+  console.log('[Generic Turn Generator] 📝 Building conversation messages...');
   const messages = buildConversationMessages(gameState.conversationHistory);
 
-  console.log(`[Generic Turn Generator] Sending ${messages.length} messages to LLM`);
-  console.log(`[Generic Turn Generator] Conversation history has ${gameState.conversationHistory.length} turns`);
+  console.log(`[Generic Turn Generator] 📤 Sending ${messages.length} messages to LLM`);
+  console.log(`[Generic Turn Generator] 📚 Conversation history has ${gameState.conversationHistory.length} turns`);
+  console.log(`[Generic Turn Generator] 🤖 Model: claude-sonnet-4-5-20250929`);
+  console.log(`[Generic Turn Generator] 📏 System prompt length: ${scenario.systemPrompt.length} chars`);
 
   try {
+    console.log('[Generic Turn Generator] ⏳ Waiting for LLM response...');
+    const llmStartTime = Date.now();
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 3500,
@@ -36,13 +41,17 @@ export async function generateGenericTurn(
       temperature: 0.8,
     });
 
+    const llmElapsed = Date.now() - llmStartTime;
+    console.log(`[Generic Turn Generator] ✅ LLM responded in ${llmElapsed}ms`);
+
     const responseText = response.content[0].type === 'text' ? response.content[0].text : '';
-    console.log(`[Generic Turn Generator] Received response (${responseText.length} chars)`);
+    console.log(`[Generic Turn Generator] 📄 Received response (${responseText.length} chars)`);
 
     // Parse the JSON response
+    console.log('[Generic Turn Generator] 🔍 Parsing JSON response...');
     const turnResponse = parseTurnResponse(responseText);
 
-    console.log(`[Generic Turn Generator] Turn generated:`, {
+    console.log(`[Generic Turn Generator] ✅ Turn successfully generated:`, {
       situationLength: turnResponse.situation.length,
       choicesCount: turnResponse.choices.length,
       gameStatus: turnResponse.gameStatus,
@@ -51,7 +60,13 @@ export async function generateGenericTurn(
 
     return turnResponse;
   } catch (error) {
-    console.error('[Generic Turn Generator] Error:', error);
+    console.error('[Generic Turn Generator] ❌ Error:', error);
+    if (error instanceof Error) {
+      console.error('[Generic Turn Generator] 📋 Error details:', {
+        name: error.name,
+        message: error.message,
+      });
+    }
     throw error;
   }
 }
