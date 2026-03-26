@@ -1,7 +1,6 @@
 import { Turn } from '@/types/turn';
 import { GameState } from '@/types/game';
-import { generateGenericTurn } from '@/lib/game-engine/generic-turn-generator';
-import { getScenario } from '@/lib/game-engine/generic-turn-processor';
+import { TurnResponse } from '@/lib/scenarios/types';
 import { generateTurnImage, getCachedTurnImage, cacheTurnImage } from '@/lib/game-engine/image-generator';
 
 /**
@@ -12,11 +11,24 @@ export async function getTurnData(turnNumber: number, gameState: GameState): Pro
   try {
     console.log(`[getTurnData] Generating turn ${turnNumber}`);
 
-    // Get the scenario configuration
-    const scenario = getScenario(gameState.scenarioId);
+    // Call server-side API route for turn generation
+    const response = await fetch('/api/generate-turn', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        gameState,
+      }),
+    });
 
-    // Generate turn using LLM with full conversation history
-    const turnResponse = await generateGenericTurn(scenario, gameState);
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('[getTurnData] API error:', errorData);
+      throw new Error(errorData.message || 'Failed to generate turn');
+    }
+
+    const turnResponse: TurnResponse = await response.json();
 
     // If game has ended, return ending turn
     if (turnResponse.gameStatus === 'ended') {
