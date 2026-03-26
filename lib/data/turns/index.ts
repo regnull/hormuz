@@ -82,7 +82,8 @@ export async function getTurnData(turnNumber: number, gameState: GameState): Pro
       imageUrl = await generateTurnImage(
         gameState,
         title,
-        turnResponse.situation
+        turnResponse.situation,
+        turnNumber
       );
 
       const elapsed = Date.now() - startTime;

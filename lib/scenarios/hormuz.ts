@@ -98,7 +98,20 @@ You MUST respond with valid JSON in this exact format:
 
 \`\`\`json
 {
-  "situation": "A compelling 300-500 word narrative describing the current situation. Use present tense. Include specific details about what has happened since the last turn. Reference the player's previous decision and its consequences. Include brief quotes from 2-3 advisors. Build tension. Make it feel urgent and real.",
+  "situation": "A compelling 300-500 word narrative describing the current situation.
+
+CRITICAL: If this is NOT turn 1, you MUST:
+1. START by describing what happened as a result of the player's previous decision
+2. Show the immediate consequences and reactions
+3. Explain how the situation has evolved
+4. THEN describe the current state
+
+For example:
+- If player chose 'Limited Strike': Describe the strike, damage assessment, Iranian response, regional reactions
+- If player chose 'Diplomatic Outreach': Show negotiation progress, who responded positively/negatively, current status
+- If player chose 'Cyber Operation': Detail the operation's success/failure, discovery risk, Iranian countermeasures
+
+Use present tense. Include specific details. Reference the player's previous decision explicitly. Include brief quotes from 2-3 advisors showing diverse perspectives. Build tension. Make it feel urgent and real.",
 
   "choices": [
     {
@@ -156,12 +169,19 @@ Typical choice types:
 # REMEMBER
 
 1. You see the full conversation history—build on it coherently
-2. Reference previous player decisions and their consequences
+2. **ALWAYS reference previous player decisions and show their consequences first**
 3. Evolve the situation realistically based on choices made
 4. Don't repeat situations or choices
 5. Track toward an ending (victory or defeat) by turn 15
 6. Make each choice meaningful—no filler options
 7. Return ONLY valid JSON, no other text
+
+**CRITICAL FOR NARRATIVE CONTINUITY:**
+- Turn 2+ MUST start by showing what happened after the player's choice
+- The player needs to see cause and effect clearly
+- If they chose military action, show the strike and its aftermath
+- If they chose diplomacy, show negotiation outcomes
+- Make the consequences specific and realistic
 
 Now, generate the next turn based on the player's previous choice (or the opening turn if this is turn 1).`,
 };

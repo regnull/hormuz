@@ -7,7 +7,8 @@ import { GameState } from '@/types/game';
 export async function generateTurnImage(
   gameState: GameState,
   turnTitle: string,
-  situation: string
+  situation: string,
+  turnNumber: number
 ): Promise<string | null> {
   console.log('[Image Generator] Starting image generation...');
 
@@ -23,6 +24,7 @@ export async function generateTurnImage(
         gameState,
         turnTitle,
         situation,
+        turnNumber,
       }),
     });
 

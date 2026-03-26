@@ -45,7 +45,7 @@ export async function generateTurn(gameState: GameState): Promise<Turn> {
   let imageUrl = getCachedTurnImage(turnNumber);
 
   if (!imageUrl) {
-    imageUrl = await generateTurnImage(gameState, title, situation);
+    imageUrl = await generateTurnImage(gameState, title, situation, turnNumber);
     if (imageUrl) {
       cacheTurnImage(turnNumber, imageUrl);
       console.log(`[Turn Generator] Image generated and cached`);

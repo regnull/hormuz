@@ -279,7 +279,7 @@ export default function GamePage() {
                 >
                   <ChoiceCard
                     option={option}
-                    onClick={() => makeChoice(option.id)}
+                    onClick={() => makeChoice(option.label)}
                     disabled={isLoading}
                   />
                 </motion.div>
