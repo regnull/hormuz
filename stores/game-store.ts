@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { GameState } from '@/types/game';
 import { ConsequenceResult } from '@/types/consequence';
 import { createInitialGameState } from '@/lib/game-engine/initial-state';
-import { processChoice } from '@/lib/game-engine/turn-processor';
+import { processGenericChoice } from '@/lib/game-engine/generic-turn-processor';
 
 interface GameStore {
   // State
@@ -56,16 +56,22 @@ export const useGameStore = create<GameStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          const updatedState = await processChoice(current, optionId);
+          // Find the choice label from the optionId
+          // optionId format should be the choice label
+          const choiceLabel = optionId;
+
+          // Process the choice using generic engine
+          const updatedState = processGenericChoice(current, choiceLabel);
 
           set({
             gameState: updatedState,
             isLoading: false,
           });
 
-          // Check if game should end
-          if (shouldEndGame(updatedState)) {
-            get().endGame();
+          // Check if game has ended (will be determined by next turn generation)
+          if (updatedState.gameStatus === 'ended') {
+            // Game already ended, no need to call endGame()
+            console.log('[Game Store] Game has ended');
           }
         } catch (error) {
           console.error('Error processing choice:', error);

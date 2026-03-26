@@ -7,11 +7,14 @@ export function createInitialGameState(): GameState {
   const playerId = generatePlayerId();
 
   return {
+    scenarioId: 'hormuz', // Default scenario
     currentTurn: 1,
     maxTurns: 15,
     gameStatus: 'playing',
     endingType: null,
+    endingNarrative: undefined,
 
+    conversationHistory: [],
     choiceHistory: [],
     turnHistory: [],
 

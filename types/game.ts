@@ -7,23 +7,24 @@ export type EndingType = 'diplomatic' | 'military' | 'pyrrhic' | 'stalemate' | '
 export type ThreatLevel = 'low' | 'medium' | 'high' | 'critical';
 
 export interface GameState {
+  // Scenario
+  scenarioId: string;
+
   // Game progress
   currentTurn: number;
   maxTurns: number;
   gameStatus: GameStatus;
   endingType: EndingType;
+  endingNarrative?: string;
 
-  // Player decisions
+  // Conversation history (full LLM conversation)
+  conversationHistory: ConversationTurn[];
+
+  // Legacy fields (may be removed in future)
   choiceHistory: Choice[];
-
-  // Turn history with full context for LLM
   turnHistory: TurnHistoryEntry[];
-
-  // World state
   actors: Record<ActorId, ActorState>;
   worldState: WorldState;
-
-  // Scoring (hidden until end)
   score: Score;
   achievements: Achievement[];
 
@@ -31,6 +32,13 @@ export interface GameState {
   startedAt: Date;
   completedAt: Date | null;
   playerId: string;
+}
+
+export interface ConversationTurn {
+  turnNumber: number;
+  situation: string;
+  playerChoice: string;
+  timestamp: Date;
 }
 
 export interface Choice {
