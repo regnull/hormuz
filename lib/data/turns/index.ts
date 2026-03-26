@@ -2,6 +2,7 @@ import { Turn } from '@/types/turn';
 import { GameState } from '@/types/game';
 import { TurnResponse } from '@/lib/scenarios/types';
 import { generateTurnImage, getCachedTurnImage, cacheTurnImage } from '@/lib/game-engine/image-generator';
+import { IMAGE_GENERATION_ENABLED } from '@/lib/config/models';
 
 /**
  * Get turn data using the generic LLM-driven engine
@@ -70,33 +71,39 @@ export async function getTurnData(turnNumber: number, gameState: GameState): Pro
       risk: 'medium' as const,
     }));
 
-    // Generate image for this turn
-    console.log(`[getTurnData] 🎨 Checking for cached image for turn ${turnNumber}...`);
-    let imageUrl = getCachedTurnImage(turnNumber);
+    // Generate image for this turn (if enabled)
+    let imageUrl: string | null = null;
 
-    if (!imageUrl) {
-      console.log(`[getTurnData] 🖼️ No cached image, generating new image...`);
-      const title = `Turn ${turnNumber}`;
-      const startTime = Date.now();
+    if (IMAGE_GENERATION_ENABLED) {
+      console.log(`[getTurnData] 🎨 Checking for cached image for turn ${turnNumber}...`);
+      imageUrl = getCachedTurnImage(turnNumber);
 
-      imageUrl = await generateTurnImage(
-        gameState,
-        title,
-        turnResponse.situation,
-        turnNumber
-      );
+      if (!imageUrl) {
+        console.log(`[getTurnData] 🖼️ No cached image, generating new image...`);
+        const title = `Turn ${turnNumber}`;
+        const startTime = Date.now();
 
-      const elapsed = Date.now() - startTime;
+        imageUrl = await generateTurnImage(
+          gameState,
+          title,
+          turnResponse.situation,
+          turnNumber
+        );
 
-      if (imageUrl) {
-        cacheTurnImage(turnNumber, imageUrl);
-        console.log(`[getTurnData] ✅ Image generated in ${elapsed}ms and cached`);
-        console.log(`[getTurnData] 🔗 Image URL:`, imageUrl.substring(0, 80) + '...');
+        const elapsed = Date.now() - startTime;
+
+        if (imageUrl) {
+          cacheTurnImage(turnNumber, imageUrl);
+          console.log(`[getTurnData] ✅ Image generated in ${elapsed}ms and cached`);
+          console.log(`[getTurnData] 🔗 Image URL:`, imageUrl.substring(0, 80) + '...');
+        } else {
+          console.log(`[getTurnData] ⚠️ No image generated (took ${elapsed}ms)`);
+        }
       } else {
-        console.log(`[getTurnData] ⚠️ No image generated (took ${elapsed}ms)`);
+        console.log(`[getTurnData] ♻️ Using cached image:`, imageUrl.substring(0, 80) + '...');
       }
     } else {
-      console.log(`[getTurnData] ♻️ Using cached image:`, imageUrl.substring(0, 80) + '...');
+      console.log(`[getTurnData] 🚫 Image generation disabled (set IMAGE_GENERATION_ENABLED=true to enable)`);
     }
 
     const turn: Turn = {
